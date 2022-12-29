@@ -81,9 +81,6 @@ public class CategoryServiceImpl implements ICategoryService{
 			
 			Category categorySaved = categoryDao.save(category);
 			
-			System.out.println(category.getName());
-			System.out.println(category.getDescription());
-			
 			
 			if(categorySaved != null) {
 				list.add(categorySaved);
@@ -97,6 +94,47 @@ public class CategoryServiceImpl implements ICategoryService{
 		} catch (Exception e) {
 			
 			response.setMetadata("Respuesta no ok", "-1", "Error al guardar categoria");
+			e.printStackTrace();
+			return new ResponseEntity<CategoryResponseRest>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+			
+		}
+		return new ResponseEntity<CategoryResponseRest>(response, HttpStatus.OK);
+	}
+
+	@Override
+	@Transactional
+	public ResponseEntity<CategoryResponseRest> update(Category category, Long id) {
+		CategoryResponseRest response = new CategoryResponseRest();
+		List<Category> list = new ArrayList<>();
+		
+		try {
+			
+			Optional<Category> categorySearch = categoryDao.findById(id);
+			
+			if(categorySearch.isPresent()) {
+				// se procedera a actualizar el registro
+				categorySearch.get().setName(category.getName());
+				categorySearch.get().setDescription(category.getDescription());
+				
+				Category categoryToUpdate = categoryDao.save(categorySearch.get());
+				
+				if (categoryToUpdate != null) {
+					list.add(categoryToUpdate);
+					response.getCategoryResponse().setCategory(list);
+					response.setMetadata("Respuesta ok", "00", "Categoria actualizada");
+				} else {
+					response.setMetadata("Respuesta no ok", "-1", "Categoria no actualizada");
+					return new ResponseEntity<CategoryResponseRest>(response, HttpStatus.BAD_REQUEST);
+				}
+				
+			} else {
+				response.setMetadata("Respuesta no ok", "-1", "Categoria no encontrada");
+				return new ResponseEntity<CategoryResponseRest>(response, HttpStatus.NOT_FOUND);
+			}
+			
+		} catch (Exception e) {
+			
+			response.setMetadata("Respuesta no ok", "-1", "Error al actualizar categoria");
 			e.printStackTrace();
 			return new ResponseEntity<CategoryResponseRest>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 			
